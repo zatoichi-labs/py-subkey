@@ -1,0 +1,19 @@
+[package]
+name = "py-subkey"
+version = "0.1.0-alpha.1"
+authors = ["Zatoichi Labs <admin@zatoichi-labs.com>"]
+edition = "2018"
+
+[lib]
+name = "subkey"
+crate-type = ["cdylib"]
+
+[dependencies.pyo3]
+version = "0.8.3"
+features = ["extension-module"]
+
+[dependencies.primitives]
+git = "https://github.com/paritytech/substrate.git"
+package = "sp-core"
+features = ['full_crypto']
+rev = "333f3a7d00771d15102bd40f5aade9e58b1b095f"
