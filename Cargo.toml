@@ -1,7 +1,11 @@
 [package]
 name = "subkey"
+description = "Python API for working with Substrate keypairs"
+readme = "README.md"
 version = "0.1.0-alpha.1"
 authors = ["Zatoichi Labs <admin@zatoichi-labs.com>"]
+repository = "https://github.com/zatoichi-labs/py-subkey"
+license = "GPL-3.0-only"
 edition = "2018"
 
 [lib]
