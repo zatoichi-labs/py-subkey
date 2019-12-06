@@ -1,20 +1,24 @@
 init:
 	pip install -r requirements.txt
 
-build:
+build: init
 	maturin build -i python3.8
 
 TARGET = $(wildcard target/wheels/py_subkey-*.whl)
 
+ifndef ($(TARGET))
+install: build
+else
 install:
+endif
 	pip install -U $(TARGET)
 
-test:
+test: init install
 	pytest
 
 PYPI_TOKEN = $(shell grep -oP "password = \K.*" ~/.pypirc)
 
-publish:
+publish: init
 	maturin publish -i python3.8 --username __token__ --password $(PYPI_TOKEN)
 
 # Clean python build files
