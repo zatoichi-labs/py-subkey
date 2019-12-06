@@ -4,7 +4,7 @@ init:
 build: init
 	maturin build -i python3.8
 
-TARGET = $(wildcard target/wheels/py_subkey-*.whl)
+TARGET = $(wildcard target/wheels/subkey-*.whl)
 
 ifndef ($(TARGET))
 install: build
