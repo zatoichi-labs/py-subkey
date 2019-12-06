@@ -1,5 +1,5 @@
 [package]
-name = "py-subkey"
+name = "subkey"
 version = "0.1.0-alpha.1"
 authors = ["Zatoichi Labs <admin@zatoichi-labs.com>"]
 edition = "2018"
