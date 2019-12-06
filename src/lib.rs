@@ -9,7 +9,7 @@ use pyo3::class::PyObjectProtocol;
 use pyo3::types::PyAny;
 
 use pyo3::wrap_pyfunction;
-use pyo3::exceptions::TypeError;
+use pyo3::exceptions;
 
 mod wrapper;
 use wrapper::{Crypto, Ed25519, Sr25519, Ecdsa, SeedError};
@@ -20,12 +20,24 @@ const ED25519_KEYTYPE: &str = "ed25519";
 
 const DEV_PHRASE: &str = "bottom drive obey lake curtain smoke basket hold race lonely fit walk";
 
-fn unexpected_keytype_error(key_type: &str) -> PyErr {
-    PyErr::new::<TypeError, _>(format!("Unexpected key type: {}", key_type))
+pub enum Error<'a> {
+    UnexpectedKeytype(&'a str),
+    BadSeed(SeedError),
 }
 
-fn bad_seed_error(error: SeedError) -> PyErr {
-    PyErr::new::<TypeError, _>(format!("{:?}", error))
+impl<'a> std::convert::From<Error<'a>> for PyErr {
+    fn from(err: Error) -> PyErr {
+		match err {
+            Error::UnexpectedKeytype(k) =>
+                exceptions::TypeError::py_err(
+                    format!("Unexpected key type: {}", k)
+                ),
+            Error::BadSeed(seed_err) =>
+                exceptions::ValueError::py_err(
+                    format!("{:?}", seed_err)
+                ),
+        }
+    }
 }
 
 #[pyclass(module = "subkey")]
@@ -46,7 +58,7 @@ fn create_from_suri(suri: String, key_type: String) -> PyResult<KeyringPair> {
     Ok(match key_type.as_str() {
         ECDSA_KEYTYPE => {
             let pair = <Ecdsa as Crypto>::pair_from_suri(&suri)
-                .map_err(|e| bad_seed_error(e))?;
+                .map_err(|e| Error::BadSeed(e))?;
             let mut public = vec![0u8; 64];
             public.copy_from_slice(<Ecdsa as Crypto>::public_from_pair(&pair).as_ref());
             KeyringPair {
@@ -57,7 +69,7 @@ fn create_from_suri(suri: String, key_type: String) -> PyResult<KeyringPair> {
         },
         SR25519_KEYTYPE => {
             let pair = <Sr25519 as Crypto>::pair_from_suri(&suri)
-                .map_err(|e| bad_seed_error(e))?;
+                .map_err(|e| Error::BadSeed(e))?;
             let mut public = vec![0u8; 32];
             public.copy_from_slice(<Sr25519 as Crypto>::public_from_pair(&pair).as_ref());
             KeyringPair {
@@ -68,7 +80,7 @@ fn create_from_suri(suri: String, key_type: String) -> PyResult<KeyringPair> {
         },
         ED25519_KEYTYPE => {
             let pair = <Ed25519 as Crypto>::pair_from_suri(&suri)
-                .map_err(|e| bad_seed_error(e))?;
+                .map_err(|e| Error::BadSeed(e))?;
             let mut public = vec![0u8; 32];
             public.copy_from_slice(<Ed25519 as Crypto>::public_from_pair(&pair).as_ref());
             KeyringPair {
@@ -77,7 +89,7 @@ fn create_from_suri(suri: String, key_type: String) -> PyResult<KeyringPair> {
                 public,
             }
         },
-        _ => return Err(unexpected_keytype_error(&key_type)),
+        _ => return Err(Error::UnexpectedKeytype(&key_type).into()),
     })
 }
 
@@ -99,7 +111,7 @@ pub fn verify(key_type: &str, signature: &[u8], message: &[u8], public: &[u8]) -
             let signature = <Ed25519 as Crypto>::signature_from_slice(signature);
             <Ed25519 as Crypto>::verify(signature, message, &public)
         },
-        _ => return Err(unexpected_keytype_error(&key_type)),
+        _ => return Err(Error::UnexpectedKeytype(&key_type).into()),
     })
 }
 
@@ -125,7 +137,7 @@ impl KeyringPair {
         Ok(match self.key_type.as_str() {
             ECDSA_KEYTYPE => {
                 let pair = <Ecdsa as Crypto>::pair_from_seed_slice(&self.seed)
-                    .map_err(|e| bad_seed_error(e))?;
+                    .map_err(|e| Error::BadSeed(e))?;
                 let signature = <Ecdsa as Crypto>::sign(&pair, message);
                 let mut result = vec![0u8; 65];
                 result.copy_from_slice(signature.as_ref());
@@ -133,7 +145,7 @@ impl KeyringPair {
             },
             SR25519_KEYTYPE => {
                 let pair = <Sr25519 as Crypto>::pair_from_seed_slice(&self.seed)
-                    .map_err(|e| bad_seed_error(e))?;
+                    .map_err(|e| Error::BadSeed(e))?;
                 let signature = <Sr25519 as Crypto>::sign(&pair, message);
                 let mut result = vec![0u8; 64];
                 result.copy_from_slice(signature.as_ref());
@@ -141,13 +153,13 @@ impl KeyringPair {
             },
             ED25519_KEYTYPE => {
                 let pair = <Ed25519 as Crypto>::pair_from_seed_slice(&self.seed)
-                    .map_err(|e| bad_seed_error(e))?;
+                    .map_err(|e| Error::BadSeed(e))?;
                 let signature = <Ed25519 as Crypto>::sign(&pair, message);
                 let mut result = vec![0u8; 64];
                 result.copy_from_slice(signature.as_ref());
                 result
             },
-            _ => return Err(unexpected_keytype_error(&self.key_type)),
+            _ => return Err(Error::UnexpectedKeytype(&self.key_type).into()),
         })
     }
 
@@ -182,7 +194,7 @@ impl<'p> PyObjectProtocol<'p> for KeyringPair {
 		match op {
 			CompareOp::Eq => Ok(self.seed == other.seed),
 			CompareOp::Ne => Ok(self.seed != other.seed),
-            _ => Err(PyErr::new::<TypeError, _>("Can only test KeyringPair for equality.")),
+            _ => Err(exceptions::TypeError::py_err("Can only test KeyringPair for equality.")),
 		}
 	}
 
@@ -211,7 +223,7 @@ impl Keyring {
                 && key_type != SR25519_KEYTYPE
                 && key_type != ED25519_KEYTYPE
             {
-                return Err(unexpected_keytype_error(&key_type));
+                return Err(Error::UnexpectedKeytype(&key_type).into());
             }
             key_type
         } else {
@@ -236,7 +248,7 @@ impl Keyring {
                 && key_type != SR25519_KEYTYPE
                 && key_type != ED25519_KEYTYPE
             {
-                return Err(unexpected_keytype_error(&key_type));
+                return Err(Error::UnexpectedKeytype(&key_type).into());
             }
             key_type
         } else {
