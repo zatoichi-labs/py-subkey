@@ -1,0 +1,150 @@
+import pytest
+
+from subkey import (
+    KeyringPair,
+)
+
+
+@pytest.mark.parametrize(
+    "suri,key_type,public",
+    [
+        # ed25519 dev keys
+        (
+            '//Alice',
+            'ed25519',
+            '0x88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee',
+        ),
+        (
+            '//Alice//stash',
+            'ed25519',
+            '0x451781cd0c5504504f69ceec484cc66e4c22a2b6a9d20fb1a426d91ad074a2a8',
+        ),
+        (
+            '//Bob',
+            'ed25519',
+            '0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69',
+        ),
+        (
+            '//Bob//stash',
+            'ed25519',
+            '0x292684abbb28def63807c5f6e84e9e8689769eb37b1ab130d79dbfbf1b9a0d44',
+        ),
+        (
+            '//Charlie',
+            'ed25519',
+            '0x439660b36c6c03afafca027b910b4fecf99801834c62a5e6006f27d978de234f',
+        ),
+        (
+            '//Dave',
+            'ed25519',
+            '0x5e639b43e0052c47447dac87d6fd2b6ec50bdd4d0f614e4299c665249bbd09d9',
+        ),
+        (
+            '//Eve',
+            'ed25519',
+            '0x1dfe3e22cc0d45c70779c1095f7489a8ef3cf52d62fbd8c2fa38c9f1723502b5',
+        ),
+        (
+            '//Ferdie',
+            'ed25519',
+            '0x568cb4a574c6d178feb39c27dfc8b3f789e5f5423e19c71633c748b9acf086b5',
+        ),
+        # sr25519 dev keys
+        (
+            '//Alice',
+            'sr25519',
+            '0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d',
+        ),
+        (
+            '//Alice//stash',
+            'sr25519',
+            '0xbe5ddb1579b72e84524fc29e78609e3caf42e85aa118ebfe0b0ad404b5bdd25f',
+        ),
+        (
+            '//Bob',
+            'sr25519',
+            '0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48',
+        ),
+        (
+            '//Bob//stash',
+            'sr25519',
+            '0xfe65717dad0447d715f660a0a58411de509b42e6efb8375f562f58a554d5860e',
+        ),
+        (
+            '//Charlie',
+            'sr25519',
+            '0x90b5ab205c6974c9ea841be688864633dc9ca8a357843eeacf2314649965fe22',
+        ),
+        (
+            '//Dave',
+            'sr25519',
+            '0x306721211d5404bd9da88e0204360a1a9ab8b87c66c1bc2fcdd37f3c2222cc20',
+        ),
+        (
+            '//Eve',
+            'sr25519',
+            '0xe659a7a1628cdd93febc04a4e0646ea20e9f5f0ce097d9a05290d4a9e054df4e',
+        ),
+        (
+            '//Ferdie',
+            'sr25519',
+            '0x1cbd2d43530a44705ad088af313e18f80b53ef16b36177cd4b77b846f2a5f07c',
+        ),
+        # secp256k1 dev keys
+        (
+            '//Alice',
+            'secp256k1',
+            '0x0a1091341fe5664bfa1782d5e04779689068c916b04cb365ec3153755684d9a1'
+              '2da8d65fae6d63a4abca410b7e50d50cd95d36001c28712fd2adf944adb03b12',
+        ),
+        (
+            '//Alice//stash',
+            'secp256k1',
+            '0xc6a1c2194fa966d30bc4b9c4d5140e9a899d456372dae0e4ef230fd7d2197e72'
+              '507f616416df58260388790cf875c232e352e6caf2784c961d7252eccf990181',
+        ),
+        (
+            '//Bob',
+            'secp256k1',
+            '0x90084fdbf27d2b79d26a4f13f0ccd982cb755a661969143c37cbc49ef5b91f27'
+              'baf6745460a3da4942b61272bdd092c6efb9e19a2622b6d8e46d0ab2e3c8e1a5',
+        ),
+        (
+            '//Bob//stash',
+            'secp256k1',
+            '0xb9a427c7067d109c69e55d3d196a7d84d5f607fe30c3896846bfdf72a3d782b9'
+              '3b4d9d1e636cd1c0df4da28cdd3d7c460b2d29a8925f68a81cebc4fe186653a9',
+        ),
+        (
+            '//Charlie',
+            'secp256k1',
+            '0x89411795514af1627765eceffcbd002719f031604fadd7d188e2dc585b4e1afb'
+              '1a7d900bcd1368372292131e2bf810ee8b2245df0ed8052d9ff6a1db708e2a63',
+        ),
+        (
+            '//Dave',
+            'secp256k1',
+            '0xbc9d0ca094bd5b8b3225d7651eac5d18c1c04bf8ae8f8b263eebca4e1410ed0c'
+              '0effffe1475b0cbcce9f53eec4c0ee3ffb54a5ef4ccc79a3b2768911d6da28bb',
+        ),
+        (
+            '//Eve',
+            'secp256k1',
+            '0x1d10105e323c4afce225208f71a6441ee327a65b9e646e772500c74d31f669aa'
+              'a750a94a9da76aa0b707a0b1446a4b067ee639a44be554b7892629e3efe57a4b',
+        ),
+        (
+            '//Ferdie',
+            'secp256k1',
+            '0x91f1217d5a04cb83312ee3d88a6e6b33284e053e6ccfc3a90339a0299d12967c'
+              '022f729bc7752fffb8984ba69715c0cb5f6ff850cb1d481a40c87bfb236ffd7a',
+        ),
+    ]
+)
+def test_pairs(suri, key_type, public):
+    """
+    Test against known keypairs (obtained from ParityTech's subkey utility)
+    Note: default is ed25519 crypto
+    """
+    pair = KeyringPair(suri, key_type)
+    assert '0x'+pair.public.hex() == public

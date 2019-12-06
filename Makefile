@@ -9,6 +9,9 @@ TARGET = $(wildcard target/wheels/py_subkey-*.whl)
 install:
 	pip install -U $(TARGET)
 
+test:
+	pytest
+
 PYPI_TOKEN = $(shell grep -oP "password = \K.*" ~/.pypirc)
 
 publish:
