@@ -17,3 +17,15 @@ git = "https://github.com/paritytech/substrate.git"
 package = "sp-core"
 features = ['full_crypto']
 rev = "333f3a7d00771d15102bd40f5aade9e58b1b095f"
+
+[package.metadata.maturin]
+requires-python = ">=3.8,<4"
+project-url = ["https://github.com/zatoichi-labs/py-subkey"]
+classifier = [
+    'Development Status :: 1 - Planning',
+    'Intended Audience :: Developers',
+    'License :: OSI Approved :: MIT License',
+    'Natural Language :: English',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.8',
+]
