@@ -12,6 +12,9 @@ edition = "2018"
 name = "subkey"
 crate-type = ["cdylib"]
 
+[dependencies]
+hex = "0.4"
+
 [dependencies.pyo3]
 version = "0.8.3"
 features = ["extension-module"]

@@ -1130,6 +1130,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "subkey"
 version = "0.1.0-alpha.1"
 dependencies = [
+ "hex 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "pyo3 0.8.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "sp-core 2.0.0 (git+https://github.com/paritytech/substrate.git?rev=333f3a7d00771d15102bd40f5aade9e58b1b095f)",
 ]

@@ -1,4 +1,13 @@
+use hex;
+
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
+
 use pyo3::prelude::*;
+use pyo3::class::basic::CompareOp;
+use pyo3::class::PyObjectProtocol;
+use pyo3::types::PyAny;
+
 use pyo3::wrap_pyfunction;
 use pyo3::exceptions::TypeError;
 
@@ -145,6 +154,45 @@ impl KeyringPair {
     pub fn verify(&self, message: &[u8], signature: &[u8]) -> PyResult<bool> {
         return verify(&self.key_type, signature, message, &self.public)
     }
+}
+
+impl<'p> FromPyObject<'p> for KeyringPair {
+    fn extract(obj: &'p PyAny) -> PyResult<Self> {
+        let result: &KeyringPair = obj.downcast_ref()?;
+        Ok(KeyringPair {
+            key_type: result.key_type.clone(),
+            seed: result.seed.clone(),
+            public: result.public.clone(),
+        })
+    }
+}
+
+#[pyproto]
+impl<'p> PyObjectProtocol<'p> for KeyringPair {
+	fn __str__(&self) -> PyResult<String> {
+		Ok("0x".to_string() + &hex::encode(self.public.clone()))
+	}
+
+	fn __repr__(&self) -> PyResult<String> {
+		let s = self.__str__()?;
+		Ok(format!("KeyringPair('{}')", s))
+	}
+
+	fn __richcmp__(&self, other: KeyringPair, op: CompareOp) -> PyResult<bool> {
+		match op {
+			CompareOp::Eq => Ok(self.seed == other.seed),
+			CompareOp::Ne => Ok(self.seed != other.seed),
+            _ => Err(PyErr::new::<TypeError, _>("Can only test KeyringPair for equality.")),
+		}
+	}
+
+	fn __hash__(&self) -> PyResult<isize> {
+		let mut s = DefaultHasher::new();
+		self.seed.hash(&mut s);
+		let result = s.finish() as isize;
+
+		Ok(result)
+	}
 }
 
 #[pyclass(module = "subkey")]
