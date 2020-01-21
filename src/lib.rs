@@ -54,7 +54,7 @@ pub struct KeyringPair {
 }
 
 #[pyfunction(module = "subkey")]
-fn create_from_suri(suri: String, key_type: String) -> PyResult<KeyringPair> {
+fn create_from_suri(suri: String, key_type: &str) -> PyResult<KeyringPair> {
     if suri.len() < 2 {
         return Err(Error::BadSURI(&suri).into());
     }
@@ -64,14 +64,14 @@ fn create_from_suri(suri: String, key_type: String) -> PyResult<KeyringPair> {
     } else {
         suri
     };
-    Ok(match key_type.as_str() {
+    Ok(match key_type {
         ECDSA_KEYTYPE => {
             let pair = <Ecdsa as Crypto>::pair_from_suri(&suri)
                 .map_err(|e| Error::BadSeed(e))?;
             let mut public = vec![0u8; 64];
             public.copy_from_slice(<Ecdsa as Crypto>::public_from_pair(&pair).as_ref());
             KeyringPair {
-                key_type,
+                key_type: String::from(key_type),
                 seed: <Ecdsa as Crypto>::raw_seed(&pair),
                 public,
             }
@@ -82,7 +82,7 @@ fn create_from_suri(suri: String, key_type: String) -> PyResult<KeyringPair> {
             let mut public = vec![0u8; 32];
             public.copy_from_slice(<Sr25519 as Crypto>::public_from_pair(&pair).as_ref());
             KeyringPair {
-                key_type,
+                key_type: String::from(key_type),
                 seed: <Sr25519 as Crypto>::raw_seed(&pair),
                 public,
             }
@@ -93,7 +93,7 @@ fn create_from_suri(suri: String, key_type: String) -> PyResult<KeyringPair> {
             let mut public = vec![0u8; 32];
             public.copy_from_slice(<Ed25519 as Crypto>::public_from_pair(&pair).as_ref());
             KeyringPair {
-                key_type,
+                key_type: String::from(key_type),
                 seed: <Ed25519 as Crypto>::raw_seed(&pair),
                 public,
             }
@@ -127,7 +127,7 @@ pub fn verify(key_type: &str, signature: &[u8], message: &[u8], public: &[u8]) -
 #[pymethods]
 impl KeyringPair {
     #[new]
-    pub fn new(obj: &PyRawObject, suri: String, key_type: String) -> PyResult<()> {
+    pub fn new(obj: &PyRawObject, suri: String, key_type: &str) -> PyResult<()> {
         obj.init(create_from_suri(suri, key_type)?);
         Ok(())
     }
@@ -251,21 +251,19 @@ impl Keyring {
     pub fn default_key_type(&self) -> &str {
         self.default_key_type.as_str()
     }
-    
-    pub fn add_from_uri(&mut self, uri: String, key_type: Option<String>) -> PyResult<()> {
-        let key_type = if key_type.is_some() {
-            let key_type = key_type.unwrap();
+
+    pub fn add_from_uri(&mut self, uri: String, key_type: Option<&str>) -> PyResult<()> {
+        let pair = if let Some(key_type) = key_type {
             if key_type != ECDSA_KEYTYPE
                 && key_type != SR25519_KEYTYPE
                 && key_type != ED25519_KEYTYPE
             {
-                return Err(Error::UnexpectedKeytype(&key_type).into());
+                return Err(Error::UnexpectedKeytype(key_type).into());
             }
-            key_type
+            create_from_suri(uri, key_type)?
         } else {
-            self.default_key_type.clone()
+            create_from_suri(uri, &self.default_key_type)?
         };
-        let pair = create_from_suri(uri, key_type)?;
         self.pairs.push(pair);
         Ok(())
     }
