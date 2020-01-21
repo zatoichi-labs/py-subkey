@@ -202,8 +202,8 @@ impl<'p> PyObjectProtocol<'p> for KeyringPair {
 
 	fn __richcmp__(&self, other: KeyringPair, op: CompareOp) -> PyResult<bool> {
 		match op {
-			CompareOp::Eq => Ok(self.seed == other.seed),
-			CompareOp::Ne => Ok(self.seed != other.seed),
+			CompareOp::Eq => Ok(self.public == other.public),
+			CompareOp::Ne => Ok(self.public != other.public),
             _ => Err(exceptions::TypeError::py_err("Can only test KeyringPair for equality.")),
 		}
 	}
