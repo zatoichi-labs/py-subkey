@@ -1,19 +1,12 @@
 init:
 	pip install -r requirements.txt
 
-build: init
-	maturin build -i python3.8
+install:
+	maturin develop
 
 TARGET = $(wildcard target/wheels/subkey-*.whl)
 
-ifndef ($(TARGET))
-install: build
-else
-install:
-endif
-	pip install -U $(TARGET)
-
-test: init install
+test: install
 	pytest
 
 PYPI_TOKEN = $(shell grep -oP "password = \K.*" ~/.pypirc)
