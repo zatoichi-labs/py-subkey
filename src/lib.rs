@@ -6,7 +6,7 @@ use std::hash::{Hash, Hasher};
 use pyo3::prelude::*;
 use pyo3::class::basic::CompareOp;
 use pyo3::class::PyObjectProtocol;
-use pyo3::types::PyAny;
+use pyo3::types::{PyAny, PyBytes};
 
 use pyo3::wrap_pyfunction;
 use pyo3::exceptions;
@@ -133,8 +133,8 @@ impl KeyringPair {
         self.public.as_ref()
     }
 
-    pub fn sign(&self, message: &[u8]) -> PyResult<Vec<u8>> {
-        Ok(match self.key_type.as_str() {
+    pub fn sign<'py>(&self, py: Python<'py>, message: &[u8]) -> PyResult<&'py PyBytes> {
+        let signature = match self.key_type.as_str() {
             ECDSA_KEYTYPE => {
                 let pair = <Ecdsa as Crypto>::pair_from_seed_slice(&self.seed)
                     .map_err(|e| Error::BadSeed(e))?;
@@ -160,7 +160,8 @@ impl KeyringPair {
                 result
             },
             _ => return Err(Error::UnexpectedKeytype(&self.key_type).into()),
-        })
+        };
+        Ok(PyBytes::new(py, &signature))
     }
 
     pub fn verify(&self, message: &[u8], signature: &[u8]) -> PyResult<bool> {
