@@ -46,6 +46,7 @@ impl<'a> std::convert::From<Error<'a>> for PyErr {
 }
 
 #[pyclass(module = "subkey")]
+#[derive(Clone)]
 pub struct KeyringPair {
     key_type: String,
     seed: Vec<u8>,
@@ -219,6 +220,7 @@ impl<'p> PyObjectProtocol<'p> for KeyringPair {
 #[pyclass(module = "subkey")]
 pub struct Keyring {
     default_key_type: String,
+    #[pyo3(get)]
     pairs: Vec<KeyringPair>,
 }
 
