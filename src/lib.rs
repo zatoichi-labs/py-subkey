@@ -21,6 +21,7 @@ const ED25519_KEYTYPE: &str = "ed25519";
 const DEV_PHRASE: &str = "bottom drive obey lake curtain smoke basket hold race lonely fit walk";
 
 pub enum Error<'a> {
+    BadSURI(&'a str),
     UnexpectedKeytype(&'a str),
     BadSeed(SeedError),
 }
@@ -28,6 +29,10 @@ pub enum Error<'a> {
 impl<'a> std::convert::From<Error<'a>> for PyErr {
     fn from(err: Error) -> PyErr {
 		match err {
+            Error::BadSURI(s) =>
+                exceptions::TypeError::py_err(
+                    format!("Bad suri: '{}'", s)
+                ),
             Error::UnexpectedKeytype(k) =>
                 exceptions::TypeError::py_err(
                     format!("Unexpected key type: {}", k)
@@ -49,6 +54,9 @@ pub struct KeyringPair {
 
 #[pyfunction(module = "subkey")]
 fn create_from_suri(suri: String, key_type: String) -> PyResult<KeyringPair> {
+    if suri.len() < 2 {
+        return Err(Error::BadSURI(&suri).into());
+    }
     // Use dev phrase (INSECURE) if none is given
     let suri = if &suri.as_str()[..2] == "//" {
         DEV_PHRASE.to_string() + &suri
