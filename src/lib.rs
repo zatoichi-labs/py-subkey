@@ -35,11 +35,11 @@ impl<'a> std::convert::From<Error<'a>> for PyErr {
                 ),
             Error::UnexpectedKeytype(k) =>
                 exceptions::TypeError::py_err(
-                    format!("Unexpected key type: {}", k)
+                    format!("Unexpected key type: '{}'", k)
                 ),
             Error::BadSeed(seed_err) =>
-                exceptions::ValueError::py_err(
-                    format!("{:?}", seed_err)
+                exceptions::TypeError::py_err(
+                    format!("Bad Seed: {:?}", seed_err)
                 ),
         }
     }
